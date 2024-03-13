@@ -8,4 +8,5 @@ urlpatterns = [
     path('exercises', ExerciseView.as_view(), name='exercises'),
     path('user-plan', UserPlanView.as_view(), name='set-get_plan'),
     path('workout', WorkoutView.as_view(), name='workout-mode'),
+    path('tracker', UserTrackView.as_view(), name='tracker'),
 ]

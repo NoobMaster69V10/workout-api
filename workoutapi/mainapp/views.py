@@ -216,3 +216,42 @@ class WorkoutView(APIView):
             raise ObjectDoesNotExist("This exercise does not exist!")
 
         return Response({"message": "Completed exercises added successfully!"})
+
+
+""" User Tracker View """
+
+
+class UserTrackView(APIView):
+    def post(self, request):
+        token = request.COOKIES.get('jwt')
+
+        if not token:
+            raise AuthenticationFailed("Unauthenticated user!")
+        try:
+            payload = jwt.decode(token, SIMPLE_JWT['SIGNING_KEY'], algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed("Unauthenticated user!")
+
+        user = User.objects.filter(pk=payload['user_id']).first()
+
+        weight_now = request.data['weight_now']
+        goal_weight = request.data['goal_weight']
+
+        old_weight = user.weight
+
+        weight_difference = old_weight - weight_now
+        goal_difference = weight_now - goal_weight
+
+        if weight_difference < 0:
+            message = "Your have gained weight! Please review your diet and exercises."
+        elif goal_weight == weight_now:
+            message = f"You reached your goal! Your weight is {goal_weight}"
+        elif 0 < weight_difference <= goal_difference:
+            message = f"You lost {weight_difference} kg! Keep it up! ☺ you are closer to your dream!"
+        else:
+            message = "Your weight does not change! Please review exercises and diet."
+
+        user.weight = weight_now
+        user.save()
+
+        return Response({'message': message})
