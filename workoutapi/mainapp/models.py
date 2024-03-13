@@ -81,4 +81,25 @@ class Exercises(models.Model):
         verbose_name = "Exercise"
         verbose_name_plural = "Exercises"
 
+
 #################
+
+
+""" User plans model """
+
+
+class UserPlan(models.Model):
+    user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
+    exercises = models.ManyToManyField(Exercises, blank=True, default=None)
+    frequency = models.SmallIntegerField()
+    goals = models.CharField(max_length=255)
+    exercise_type = models.CharField(max_length=255, blank=True, null=True)
+    daily_duration = models.SmallIntegerField()
+    completed_exercises = models.JSONField(null=True)
+
+    def __str__(self):
+        return self.user.username
+
+    class Meta:
+        verbose_name = "User plan"
+        verbose_name_plural = "User plans"
