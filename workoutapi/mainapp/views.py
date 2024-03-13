@@ -205,7 +205,7 @@ class WorkoutView(APIView):
 
         exercise = request.data['exercise']
         is_completed = request.data['is_completed']
-        exercise_obj = Exercises.objects.get(name=exercise)
+        exercise_obj = Exercises.objects.get(name__contains=exercise)
         exercise_status = ExerciseStatus.objects.get(user=user, exercise=exercise_obj)
 
         if exercise_obj:
