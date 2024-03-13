@@ -85,6 +85,22 @@ class Exercises(models.Model):
 #################
 
 
+""" Completed exercise table model """
+
+
+class ExerciseStatus(models.Model):
+    user = models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True)
+    exercise = models.ForeignKey(Exercises, on_delete=models.DO_NOTHING, null=True)
+    status = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.user.username
+
+    class Meta:
+        verbose_name = "Exercise status"
+        verbose_name_plural = "Status of exercises"
+
+
 """ User plans model """
 
 
@@ -95,7 +111,7 @@ class UserPlan(models.Model):
     goals = models.CharField(max_length=255)
     exercise_type = models.CharField(max_length=255, blank=True, null=True)
     daily_duration = models.SmallIntegerField()
-    completed_exercises = models.JSONField(null=True)
+    exercises_status = models.ManyToManyField(ExerciseStatus, blank=True, default=None)
 
     def __str__(self):
         return self.user.username
@@ -103,3 +119,6 @@ class UserPlan(models.Model):
     class Meta:
         verbose_name = "User plan"
         verbose_name_plural = "User plans"
+
+
+

@@ -1,9 +1,9 @@
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializer import UserSerializer, ExerciseSerializer
+from .serializer import UserSerializer, ExerciseSerializer, WorkoutSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import User, Exercises, UserPlan
+from .models import User, Exercises, UserPlan, ExerciseStatus
 from django.core.exceptions import ObjectDoesNotExist
 import jwt
 from workoutapi.settings import SIMPLE_JWT
@@ -108,6 +108,12 @@ class UserPlanView(APIView):
             try:
                 ex = Exercises.objects.get(name__contains=exercise)
                 user_choice.exercises.add(ex)
+
+                ExerciseStatus.objects.create(user=user, exercise=ex).save()
+
+                ex_status_obj = ExerciseStatus.objects.get(user=user, exercise=ex)
+                user_choice.exercises_status.add(ex_status_obj)
+
             except ObjectDoesNotExist:
                 exercises_lst.append(exercise)
         user_choice.save()
@@ -115,7 +121,8 @@ class UserPlanView(APIView):
         if len(exercises_lst) == 0:
             return Response({"message": f"User plan added successfully!"})
         else:
-            return Response({"message": f"User plan added successfully! but {exercises_lst} not added because we can't find it"})
+            return Response(
+                {"message": f"User plan added successfully! but {exercises_lst} not added because we can't find it"})
 
     def put(self, request):
         token = request.COOKIES.get('jwt')
@@ -146,6 +153,12 @@ class UserPlanView(APIView):
         for exercise in exercises:
             try:
                 ex = Exercises.objects.get(name__contains=exercise)
+                ex_status = ExerciseStatus.objects.filter(user=user, exercise=ex)
+                if not ex_status:
+                    ExerciseStatus.objects.create(user=user, exercise=ex).save()
+
+                ex_status_obj = ExerciseStatus.objects.get(user=user, exercise=ex)
+                user_choice.exercises_status.add(ex_status_obj)
                 user_choice.exercises.add(ex)
             except ObjectDoesNotExist:
                 exercises_lst.append(exercise)
@@ -154,4 +167,52 @@ class UserPlanView(APIView):
         if len(exercises_lst) == 0:
             return Response({"message": f"User plan updated successfully!"})
         else:
-            return Response({"message": f"User plan updated successfully! but {exercises_lst} not added because we can't find it"})
+            return Response(
+                {"message": f"User plan updated successfully! but {exercises_lst} not added because we can't find it"})
+
+
+""" Workout mode view """
+
+
+class WorkoutView(APIView):
+    def get(self, request):
+        token = request.COOKIES.get('jwt')
+
+        if not token:
+            raise AuthenticationFailed("Unauthenticated user!")
+        try:
+            payload = jwt.decode(token, SIMPLE_JWT['SIGNING_KEY'], algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed("Unauthenticated user!")
+
+        user = User.objects.filter(pk=payload['user_id']).first()
+
+        user_plan = UserPlan.objects.filter(user=user)
+
+        return Response(WorkoutSerializer(user_plan, many=True).data)
+
+    def put(self, request):
+        token = request.COOKIES.get('jwt')
+
+        if not token:
+            raise AuthenticationFailed("Unauthenticated user!")
+        try:
+            payload = jwt.decode(token, SIMPLE_JWT['SIGNING_KEY'], algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed("Unauthenticated user!")
+
+        user = User.objects.filter(pk=payload['user_id']).first()
+
+        exercise = request.data['exercise']
+        is_completed = request.data['is_completed']
+        exercise_obj = Exercises.objects.get(name=exercise)
+        exercise_status = ExerciseStatus.objects.get(user=user, exercise=exercise_obj)
+
+        if exercise_obj:
+
+            exercise_status.status = is_completed
+            exercise_status.save()
+        else:
+            raise ObjectDoesNotExist("This exercise does not exist!")
+
+        return Response({"message": "Completed exercises added successfully!"})

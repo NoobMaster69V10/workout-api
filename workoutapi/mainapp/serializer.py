@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Exercises
+from .models import User, Exercises, UserPlan, ExerciseStatus
 
 """ User serializer """
 
@@ -30,3 +30,36 @@ class ExerciseSerializer(serializers.ModelSerializer):
         fields = ['name', 'description', 'instruction',
                   'target_muscles', 'exercise_type',
                   'rest_between_sets']
+
+
+""" Exercise name serializer """
+
+
+class ExerciseNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Exercises
+        fields = ['name']
+
+
+""" Exercise status serializer """
+
+
+class ExerciseStatusSerializer(serializers.ModelSerializer):
+    exercise = ExerciseNameSerializer(read_only=True)
+
+    class Meta:
+        model = ExerciseStatus
+        fields = ['exercise', 'status']
+
+
+""" Workout serializer """
+
+
+class WorkoutSerializer(serializers.ModelSerializer):
+    exercises = ExerciseSerializer(many=True, read_only=True)
+    user = UserSerializer(read_only=True)
+    exercises_status = ExerciseStatusSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = UserPlan
+        fields = ['user', 'exercises', 'frequency', 'goals', 'exercise_type', 'daily_duration', 'exercises_status']
