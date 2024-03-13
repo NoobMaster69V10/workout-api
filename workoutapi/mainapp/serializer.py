@@ -1,5 +1,7 @@
 from rest_framework import serializers
-from .models import User
+from .models import User, Exercises
+
+""" User serializer """
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -17,3 +19,14 @@ class UserSerializer(serializers.ModelSerializer):
             instance.set_password(password)  # This is hashing password
         instance.save()
         return instance
+
+
+""" Exercise serializer """
+
+
+class ExerciseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Exercises
+        fields = ['name', 'description', 'instruction',
+                  'target_muscles', 'exercise_type',
+                  'rest_between_sets']

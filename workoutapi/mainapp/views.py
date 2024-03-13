@@ -1,9 +1,9 @@
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializer import UserSerializer
+from .serializer import UserSerializer, ExerciseSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import User
+from .models import User, Exercises
 
 """ Authentication/Registration/Logout Views """
 
@@ -59,3 +59,11 @@ class LogoutView(APIView):
 
 #########################
 
+""" Exercise View """
+
+
+class ExerciseView(APIView):
+    def get(self, request):
+        exercises = Exercises.objects.all()
+
+        return Response(ExerciseSerializer(exercises, many=True).data)

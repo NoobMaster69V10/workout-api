@@ -63,4 +63,22 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 #########################
 
+""" Exercise table model """
 
+
+class Exercises(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    description = models.CharField(max_length=255)
+    instruction = models.CharField(max_length=255)
+    target_muscles = models.CharField(max_length=150)
+    rest_between_sets = models.CharField(max_length=100)
+    exercise_type = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = "Exercise"
+        verbose_name_plural = "Exercises"
+
+#################
